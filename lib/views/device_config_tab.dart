@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:yuji_ui/models/room.dart';
-import '../models/device.dart';
 import '../services/api_service.dart';
 import 'add_room_dialog.dart'; // Import the AddRoomDialog
 
@@ -13,8 +12,8 @@ class DeviceConfigTab extends StatefulWidget {
 
 class _DeviceConfigTabState extends State<DeviceConfigTab> {
   final ApiService _apiService = ApiService();
-  List<Room> _rooms = [];
   bool _isLoading = true;
+  List<Room> _rooms = [];
 
   @override
   void initState() {

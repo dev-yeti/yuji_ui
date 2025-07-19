@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/room.dart';
-import '../models/device.dart';
 import '../models/switch.dart';
+import '../config/app_config.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8080/api'; // Android Emulator localhost
+  // Use the baseUrl from your AppConfig or define it here
+  static final String baseUrl = AppConfig.baseUrl;
 
 
 Future<List<Room>> getRooms() async {

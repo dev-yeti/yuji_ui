@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
 
 class SchedulesTab extends StatefulWidget {
   const SchedulesTab({Key? key}) : super(key: key);
@@ -9,7 +8,7 @@ class SchedulesTab extends StatefulWidget {
 }
 
 class _SchedulesTabState extends State<SchedulesTab> {
-  final ApiService _apiService = ApiService();
+
   late Future<List<Map<String, dynamic>>> _schedulesFuture;
 
   @override
