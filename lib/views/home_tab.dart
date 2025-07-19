@@ -25,7 +25,7 @@ class HomeTab extends StatelessWidget {
           _buildDashboardCard(
             context,
             'Rooms',
-            Icons.room,
+            Icons.home,
             '5 Rooms',
             Colors.blue,
           ),
