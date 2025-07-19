@@ -136,6 +136,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.indigo, // Add background color
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white70,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),

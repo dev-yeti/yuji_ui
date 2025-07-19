@@ -11,7 +11,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 5), () {
       Navigator.pushReplacementNamed(context, '/login');
     });
   }
@@ -19,19 +19,25 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: SizedBox.expand(
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            Text(
-              'Yuji Home',
-              style: Theme.of(context).textTheme.headlineLarge,
+            Image.asset(
+              'assets/images/yuji_splash.png',
+              fit: BoxFit.cover,
             ),
-            const SizedBox(height: 20),
-            const CircularProgressIndicator(),
+            const Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 48),
+                child: CircularProgressIndicator(),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
+

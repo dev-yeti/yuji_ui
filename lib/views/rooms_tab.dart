@@ -249,12 +249,6 @@ class _RoomsTabState extends State<RoomsTab> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add new room
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
