@@ -11,9 +11,11 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _userNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _homeNameController = TextEditingController();
   final _mobileController = TextEditingController();
+  final _userIdController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _apiService = ApiService();
@@ -27,12 +29,20 @@ class _SignupScreenState extends State<SignupScreen> {
 
       try {
         bool success = await _apiService.register(
-          _emailController.text,
-          _passwordController.text,
           _userNameController.text,
+          _lastNameController.text,
+          _emailController.text,
+          _mobileController.text,
+          _userIdController.text,
+          _passwordController.text
         );
         if (success) {
-          Navigator.pushReplacementNamed(context, '/home');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Registration completed successfully, please login'),
+            duration: const Duration(seconds: 5), // Show for 5 seconds
+            backgroundColor: Colors.green,),
+          );
+          Navigator.pushReplacementNamed(context, '/login');
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Registration failed')),
@@ -64,7 +74,17 @@ class _SignupScreenState extends State<SignupScreen> {
               TextFormField(
                 controller: _userNameController,
                 decoration: const InputDecoration(
-                  labelText: 'User Name',
+                  labelText: 'First Name',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Please enter your name' : null,
+              ),
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: _lastNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Last Name',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
@@ -89,16 +109,6 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _homeNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Home Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Please enter home name' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
                 controller: _mobileController,
                 decoration: const InputDecoration(
                   labelText: 'Mobile Number',
@@ -114,6 +124,16 @@ class _SignupScreenState extends State<SignupScreen> {
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _userIdController,
+                decoration: const InputDecoration(
+                  labelText: 'User Id',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Please enter your user id' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(

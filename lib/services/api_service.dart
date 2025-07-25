@@ -3,11 +3,13 @@ import 'package:http/http.dart' as http;
 import '../models/room.dart';
 import '../models/switch.dart';
 import '../config/app_config.dart';
+import '../models/user.dart';
+import '../session/session_manager.dart';
 
 class ApiService {
   // Use the baseUrl from your AppConfig or define it here
   static final String baseUrl = AppConfig.baseUrl;
-
+  User user = User("", "");
 
 Future<List<Room>> getRooms() async {
     // Mock response JSON
@@ -85,29 +87,44 @@ Future<List<Room>> getRooms() async {
   }
 
   Future<bool> login(String email, String password) async {
-    /* final response = await http.post(
+    print("Logging in with email: $email, password: $password");
+    user = User(email, password);
+     final response = await http.post(
       Uri.parse('$baseUrl/auth/login'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'email': email,
-        'password': password,
-      }),
-    ); */
-    //return response.statusCode == 200;
-    return true;
+      body: json.encode({'user_uuid': user.userUUId, 'password': user.password}),); 
+    
+    if(response.statusCode == 200) {
+      // Assuming the API returns a token or some user data on successful login
+      final data = json.decode(response.body);
+      print(data);
+      try {
+        final userId = data['user_id']?.toString() ?? '';
+        final id = int.tryParse(data['id'].toString()) ?? 0;
+        await SessionManager.saveUserSession(userId, id);
+      } 
+      catch (e) {
+        print('Session save error: $e');
+      }
+
+    }
+    return response.statusCode == 200;
+    //return true;
   }
 
-  Future<bool> register(String email, String password, String name) async {
+  Future<bool> register(String firstName, String lastName, String email, String mobile, String userId, String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/auth/register'),
+      Uri.parse('$baseUrl/auth/registerUser'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
-        'email': email,
-        'password': password,
-        'name': name,
-      }),
+            'first_name': firstName,
+            'last_name': lastName,
+            'email': email,
+            'phone_number': mobile,
+            'user_uuid': userId,
+            'password': password}),
     );
-    return response.statusCode == 201;
+    return response.statusCode == 200;
   }
 
   Future<Room> getRoomByName(String name) async {

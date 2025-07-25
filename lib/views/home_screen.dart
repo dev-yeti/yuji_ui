@@ -3,6 +3,7 @@ import 'home_tab.dart';
 import 'rooms_tab.dart';
 import 'device_config_tab.dart';
 import 'schedules_tab.dart';
+import '../session/session_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -121,9 +122,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ListTile(
               leading: Icon(Icons.logout),
               title: Text('Logout'),
-              onTap: () {
+              onTap: () async {
+                // Clear session and navigate to login
+                await SessionManager.clearSession();
                 Navigator.pop(context);
-                // TODO: Implement logout logic
+                Navigator.pushReplacementNamed(context, '/login');
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Logged out!'))
                 );
