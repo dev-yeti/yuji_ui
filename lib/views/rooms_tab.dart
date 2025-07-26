@@ -18,6 +18,7 @@ class _RoomsTabState extends State<RoomsTab> {
   void initState() {
     super.initState();
     _roomsFuture = _apiService.getRooms().then((rooms) async {
+      print('Fetched ${rooms.length} rooms');
       if (rooms.isNotEmpty) {
         final latestRoom = await _apiService.getRoomByName(rooms[0].name);
         setState(() {
@@ -216,7 +217,9 @@ class _RoomsTabState extends State<RoomsTab> {
                                         setState(() {
                                           sw.isOn = val;
                                         });
+
                                         // Optionally call API to update fan on/off
+                                        //_apiService.updateSwitch(sw.id, sw.isOn, sw.fanSpeed);
                                       },
                                     ),
                                   ],

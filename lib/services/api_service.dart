@@ -11,69 +11,72 @@ class ApiService {
   static final String baseUrl = AppConfig.baseUrl;
   User user = User("", "");
 
-Future<List<Room>> getRooms() async {
-    // Mock response JSON
-    final mockJson = '''
-    [
-      {
-        "id": 1,
-        "name": "Living Room",
-        "description": "Main family area",
-        "deviceCount": 2,
-        "switches": [
-          { "id": 101, "name": "Ceiling Light", "isOn": true },
-          { "id": 102, "name": "Ceiling Light", "isOn": true },
-          { "id": 103, "name": "Ceiling Light", "isOn": true },
-          { "id": 104, "name": "Ceiling Light", "isOn": true },
-          { "id": 105, "name": "Ceiling Light", "isOn": true },
-          { "id": 106, "name": "Ceiling Light", "isOn": true },
-          { "id": 107, "name": "Fan", "isOn": false, "fanSpeed": 50 },
-          { "id": 108, "name": "Fan", "isOn": false, "fanSpeed": 50 }
-        ]
-      },
-      {
-        "id": 2,
-        "name": "Bedroom",
-        "description": "Master bedroom",
-        "deviceCount": 1,
-        "switches": [
-          { "id": 201, "name": "Bed Lamp", "isOn": true }
-        ]
-      },
-      {
-        "id": 3,
-        "name": "Kitchen",
-        "description": "Master bedroom",
-        "deviceCount": 1,
-        "switches": [
-          { "id": 201, "name": "Bulb", "isOn": true }
-        ]
-      },
-      {
-        "id": 4,
-        "name": "Bathroom",
-        "description": "Master bedroom",
-        "deviceCount": 1,
-        "switches": [
-          { "id": 201, "name": "Shower Light", "isOn": true }
-        ]
-      }
-    ]
-    ''';
-    await Future.delayed(const Duration(milliseconds: 500)); // Simulate network delay
-    List<dynamic> roomsJson = json.decode(mockJson);
-    return roomsJson.map((json) => Room.fromJson(json)).toList();
-  }
+// Future<List<Room>> getRooms() async {
+//     // Mock response JSON
+//     final mockJson = '''
+//     [
+//       {
+//         "id": 1,
+//         "name": "Living Room",
+//         "description": "Main family area",
+//         "deviceCount": 0,
+//         "device_addr": "abc_abc",
+//         "user_id": "user_123",
+//         "switches": [
+//          ]
+//       },
+//       {
+//         "id": 2,
+//         "name": "Bedroom",
+//         "description": "Master bedroom",
+//         "deviceCount": 1,
+//         "device_addr": "xyz_xyz",
+//         "user_id": "user_456",
+//         "switches": [
+//           { "id": 201, "name": "Bed Lamp", "isOn": true }
+//         ]
+//       },
+//       {
+//         "id": 3,
+//         "name": "Kitchen",
+//         "description": "Master bedroom",
+//         "deviceCount": 1,
+//         "device_addr": "kitchen_123",
+//         "user_id": "user_789",
+//         "switches": [
+          
+//         ]
+//       },
+//       {
+//         "id": 4,
+//         "name": "Bathroom",
+//         "description": "Master bedroom",
+//         "deviceCount": 1,
+//         "device_addr": "bathroom_123",
+//         "user_id": "user_789",
+//         "switches": [
+        
+//         ]
+//       }
+//     ]
+//     ''';
+//     await Future.delayed(const Duration(milliseconds: 500)); // Simulate network delay
+//     List<dynamic> roomsJson = json.decode(mockJson);
+//     return roomsJson.map((json) => Room.fromJson(json)).toList();
+//   }
 
-  // Future<List<Room>> getRooms() async {
-  //   final response = await http.get(Uri.parse('$baseUrl/rooms'));
-  //   if (response.statusCode == 200) {
-  //     List<dynamic> roomsJson = json.decode(response.body);
-  //     return roomsJson.map((json) => Room.fromJson(json)).toList();
-  //   } else {
-  //     throw Exception('Failed to load rooms');
-  //   }
-  // }
+  Future<List<Room>> getRooms() async {
+    // Fetch rooms from the API
+    int? id = await SessionManager.getId();
+    final response = await http.get(Uri.parse('$baseUrl/rooms?userId=$id'));
+    print("Fetching rooms from API: $baseUrl/rooms?userId=$id");
+    if (response.statusCode == 200) {
+      List<dynamic> roomsJson = json.decode(response.body);
+      return roomsJson.map((json) => Room.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load rooms');
+    }
+  }
 
   Future<List<Room>> getDevices(int roomId) async {
    return getRooms();
@@ -128,43 +131,16 @@ Future<List<Room>> getRooms() async {
   }
 
   Future<Room> getRoomByName(String name) async {
-    // Mock response for demonstration
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (name == "Living Room") {
-      return Room(
-        id: 1,
-        name: "Living Room",
-        description: "Main family area",
-        deviceCount: 2,
-        switches: [
-          Switch(id: 101, name: "Ceiling Light", isOn: true),
-          Switch(id: 102, name: "Ceiling Light", isOn: true),
-          Switch(id: 103, name: "Ceiling Light", isOn: true),
-          Switch(id: 104, name: "Ceiling Light", isOn: true),
-          Switch(id: 105, name: "Ceiling Light", isOn: true),
-          Switch(id: 106, name: "Ceiling Light", isOn: true),
-          Switch(id: 107, name: "Fan", isOn: false, fanSpeed: 50),
-          Switch(id: 108, name: "Fan", isOn: false, fanSpeed: 50), // Add fanSpeed here
-        ],
-      );
-    } else if (name == "Bedroom") {
-      return Room(
-        id: 2,
-        name: "Bedroom",
-        description: "Master bedroom",
-        deviceCount: 1,
-        switches: [
-          Switch(id: 201, name: "Bed Lamp", isOn: true),
-        ],
-      );
+    int? id = await SessionManager.getId();
+    print("Fetching room by name: $name for user ID: $id");
+    final response = await http.get(Uri.parse('$baseUrl/getSwitches?topicName=esp/test&roomName=$name&user_id=$id'));
+    if (response.statusCode == 200) {
+      dynamic roomJson = json.decode(response.body);
+      print(roomJson);
+      return Room.fromJson(roomJson);
+    } else {
+      throw Exception('Failed to load devices');
     }
-    // Default mock room
-    return Room(
-      id: 0,
-      name: name,
-      description: "Unknown room",
-      deviceCount: 0,
-      switches: [],
-    );
+    
   }
 }

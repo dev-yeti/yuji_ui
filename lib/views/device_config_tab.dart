@@ -143,6 +143,8 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
                   name: title,
                   description: '',
                   deviceCount: 0,
+                  device_addr: '',
+                  user_id:0,
                   switches: [],
                 ));
                 showModalBottomSheet(
