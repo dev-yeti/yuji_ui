@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class AddRoomDialog extends StatefulWidget {
   final String initialRoomName;
@@ -21,6 +22,7 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
   String? _selectedRoomName;
   late TextEditingController _descController;
   late TextEditingController _macController;
+  String? _selectedModule = 'Yuji-4-Module'; // default selection
 
   final List<String> roomNames = [
     'Living Room',
@@ -30,6 +32,9 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
     'Office',
     'Garage',
   ];
+
+  final ApiService _apiService = ApiService();
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -131,6 +136,25 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
                   validator: (val) =>
                       val == null || val.isEmpty ? 'Please enter MAC address' : null,
                 ),
+                const SizedBox(height: 18),
+                DropdownButtonFormField<String>(
+                  value: _selectedModule,
+                  decoration: const InputDecoration(
+                    labelText: 'Module Type',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Yuji-1-Module', child: Text('Yuji-1-Module')),
+                    DropdownMenuItem(value: 'Yuji-4-Module', child: Text('Yuji-4-Module')),
+                    DropdownMenuItem(value: 'Yuji-6-Module', child: Text('Yuji-6-Module')),
+                    DropdownMenuItem(value: 'Yuji-8-Module', child: Text('Yuji-8-Module')),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedModule = value;
+                    });
+                  },
+                ),
                 const SizedBox(height: 28),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -153,12 +177,49 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       ),
-                      onPressed: () {
-                        if (_formKey.currentState?.validate() ?? false) {
-                          // Save or update logic here
-                          Navigator.pop(context);
-                        }
-                      },
+                      onPressed: _isSubmitting
+                          ? null
+                          : () async {
+                              if (_formKey.currentState?.validate() ?? false) {
+                                setState(() {
+                                  _isSubmitting = true;
+                                });
+                                try {
+                                  if (widget.initialRoomName.isEmpty) {
+                                    // Add new room
+                                    await _apiService.addRoom(
+                                      name: _selectedRoomName!,
+                                      description: _descController.text,
+                                      macAddress: _macController.text,
+                                      moduleType: _selectedModule!,
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Room added successfully')),
+                                    );
+                                  } else {
+                                    // Update existing room
+                                    await _apiService.updateRoom(
+                                      name: _selectedRoomName!,
+                                      description: _descController.text,
+                                      macAddress: _macController.text,
+                                      moduleType: _selectedModule!,
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Room updated successfully')),
+                                    );
+                                  }
+                                  Navigator.pop(context, true);
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error: $e')),
+                                  );
+                                } finally {
+                                  setState(() {
+                                    _isSubmitting = false;
+                                  });
+                                }
+                              }
+                            },
                     ),
                   ],
                 ),

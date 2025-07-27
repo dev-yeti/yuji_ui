@@ -76,14 +76,14 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
                           for (final room in rooms)
                             _buildDashboardCard(
                               context,
-                              room.name,
+                              room, // pass the whole Room object
                               _getRoomIcon(room.name),
                               '${room.deviceCount} Devices',
                               Colors.indigo,
                             ),
                           _buildDashboardCard(
                             context,
-                            'Add Device',
+                            null, // for Add Device, pass null
                             Icons.add_circle,
                             'Add New',
                             Colors.blueAccent,
@@ -114,8 +114,9 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
     }
   }
 
-  Widget _buildDashboardCard(BuildContext context, String title, IconData icon,
+  Widget _buildDashboardCard(BuildContext context, Room? room, IconData icon,
       String subtitle, Color color) {
+    final String title = room?.name ?? 'Add Device';
     return Card(
       elevation: 4,
       child: Stack(
@@ -138,13 +139,14 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
               } else {
                 // Fetch room details to populate dialog
                 final rooms = await _apiService.getRooms();
-                final room = rooms.firstWhere((r) => r.name == title, orElse: () => Room(
+                final roomDetails = rooms.firstWhere((r) => r.name == title, orElse: () => Room(
                   id: 0,
                   name: title,
                   description: '',
                   deviceCount: 0,
                   device_addr: '',
                   user_id:0,
+                  channel_type: '',
                   switches: [],
                 ));
                 showModalBottomSheet(
@@ -156,7 +158,7 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
                     ),
                     child: SingleChildScrollView(
                       child: AddRoomDialog(
-                        initialRoomName: room.name,
+                        initialRoomName: roomDetails.name,
                         //initialDescription: room.description,
                         // Add more fields if needed
                       ),
@@ -211,6 +213,8 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
                 icon: const Icon(Icons.delete, color: Colors.redAccent, size: 22),
                 tooltip: 'Delete Room',
                 onPressed: () async {
+                  // Now you have access to the full room object
+                  // Example: room.id, room.device_addr, etc.
                   bool confirmConnectivity = false;
                   final confirm = await showDialog<bool>(
                     context: context,
@@ -221,7 +225,7 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
                           content: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text('Are you sure you want to delete "$title"?'),
+                              Text('Are you sure you want to delete with out checking room connection "$title"?'),
                               const SizedBox(height: 12),
                               CheckboxListTile(
                                 value: confirmConnectivity,
@@ -241,9 +245,8 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
                               child: const Text('Cancel'),
                             ),
                             ElevatedButton(
-                              onPressed: confirmConnectivity
-                                  ? () => Navigator.pop(context, true)
-                                  : null,
+                              // Enable delete button by default (remove confirmConnectivity check)
+                              onPressed: () => Navigator.pop(context, true),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.redAccent,
                               ),
@@ -255,14 +258,20 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
                     },
                   );
                   if (confirm == true) {
-                    // TODO: Call API to delete room here if available
-                    setState(() {
-                      // Remove from UI (for demo, you may want to refresh from API)
-                      // _rooms.removeWhere((r) => r.name == title);
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Room "$title" deleted')),
-                    );
+                    try {
+                      await _apiService.deleteRoom(room!, confirmConnectivity);
+                      setState(() {
+                        // Optionally remove from UI or refresh
+                        // _rooms.removeWhere((r) => r.name == room.name);
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Room "${room.name}" deleted')),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to delete room: $e')),
+                      );
+                    }
                   }
                 },
               ),

@@ -157,4 +157,59 @@ class ApiService {
       throw Exception('Failed to update switch');
     }
   }
+
+  Future<void> addRoom({
+    required String name,
+    required String description,
+    required String macAddress,
+    required String moduleType,
+  }) async {
+    final url = Uri.parse('$baseUrl/addRoom');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'user_uuid': await SessionManager.getUserId(),
+        'user_id': await SessionManager.getId(),
+        'roomName': name,
+        'device_addr': macAddress,
+        'channel_type': moduleType,
+      }),
+    );
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception('Failed to add room');
+    }
+  }
+
+  Future<void> updateRoom({
+    required String name,
+    required String description,
+    required String macAddress,
+    required String moduleType,
+  }) async {
+    final url = Uri.parse('$baseUrl/rooms/$name');
+    final response = await http.put(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'description': description,
+        'macAddress': macAddress,
+        'moduleType': moduleType,
+      }),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update room');
+    }
+  }
+
+  Future<void> deleteRoom(Room roomName, bool confirmConnectivity) async {
+    final url = Uri.parse('$baseUrl/updateOrDeleteRoom?roomName=${roomName.name}&device_addr=${roomName.device_addr}&channel_type=${roomName.channel_type}&actionType=Delete&user_id=${await SessionManager.getId()}&device_status_check=$confirmConnectivity');
+    final response = await http.get(
+      url,
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete room');
+    }
+  }
 }
