@@ -143,4 +143,18 @@ class ApiService {
     }
     
   }
+
+  Future<void> updateSwitch(Switch roomSwitch, Room room) async {
+    int? id = await SessionManager.getId();
+    final url = Uri.parse('$baseUrl/deviceCommand?roomName=${room.name}&switchId=${roomSwitch.id}&command=${roomSwitch.isOn ? "ON" : "OFF"}&deviceType=${roomSwitch.deviceType}&user_id=${id}');
+    print("url: $url");
+    
+    final response = await http.get(
+      url,
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update switch');
+    }
+  }
 }

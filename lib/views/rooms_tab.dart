@@ -219,7 +219,7 @@ class _RoomsTabState extends State<RoomsTab> {
                                         });
 
                                         // Optionally call API to update fan on/off
-                                        //_apiService.updateSwitch(sw.id, sw.isOn, sw.fanSpeed);
+                                        _apiService.updateSwitch(sw, _selectedRoom!);
                                       },
                                     ),
                                   ],
@@ -239,6 +239,7 @@ class _RoomsTabState extends State<RoomsTab> {
                                     setState(() {
                                       sw.isOn = val;
                                     });
+                                    _apiService.updateSwitch(sw, _selectedRoom!);
                                     // Optionally call API to update switch state
                                   },
                                 ),

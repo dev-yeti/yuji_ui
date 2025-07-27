@@ -3,12 +3,14 @@ class Switch {
   final String name;
   bool isOn;
   int? fanSpeed; // Add this line
+  String deviceType;
 
   Switch({
     required this.id,
     required this.name,
     required this.isOn,
     this.fanSpeed, // Add this line
+    required this.deviceType,
   });
 
   factory Switch.fromJson(Map<String, dynamic> json) {
@@ -16,7 +18,8 @@ class Switch {
       id: json['id'],
       name: json['name'],
       isOn: json['isOn'],
-      fanSpeed: json['fanSpeed'], // Add this line
+      fanSpeed: json['fanSpeed'],
+      deviceType: json['deviceType'] // Add this line
     );
   }
 
@@ -26,6 +29,7 @@ class Switch {
       'name': name,
       'isOn': isOn,
       'fanSpeed': fanSpeed, // Add this line
+      'deviceType': deviceType, // Add this line
     };
   }
 }
