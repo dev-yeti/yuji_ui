@@ -5,6 +5,8 @@ import '../models/switch.dart';
 import '../config/app_config.dart';
 import '../models/user.dart';
 import '../session/session_manager.dart';
+import 'dart:async'; 
+import 'dart:io';
 
 class ApiService {
   // Use the baseUrl from your AppConfig or define it here
@@ -116,19 +118,50 @@ class ApiService {
   }
 
   Future<bool> register(String firstName, String lastName, String email, String mobile, String userId, String password) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/auth/registerUser'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-            'first_name': firstName,
-            'last_name': lastName,
-            'email': email,
-            'phone_number': mobile,
-            'user_uuid': userId,
-            'password': password}),
-    );
-    return response.statusCode == 200;
-  }
+    print('Registering user with email: $email');
+    print('baseUrl: $baseUrl');
+
+    // Build URL and request body
+    final url = Uri.parse('$baseUrl/auth/registerUser');
+    final phoneValue = int.tryParse(mobile.toString()) ?? mobile;
+    final requestBody = {
+      'first_name': firstName,
+      'last_name': lastName,
+      'email': email,
+      'phone_number': phoneValue,
+      'user_uuid': userId,
+      'password': password,
+    };
+
+    print('POST $url');
+    print('Request body: $requestBody');
+
+    try {
+      // Add a timeout and handle network errors explicitly so the app doesn't crash
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+            body: json.encode(requestBody),
+          )
+          .timeout(const Duration(seconds: 10));
+          
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } on TimeoutException {
+      print('Register timeout: server did not respond within 10s');
+      return false;
+    } on SocketException catch (e) {
+      print('Socket error: $e — device cannot reach server. Check mobile network, server firewall, and that the server is bound to 0.0.0.0.');
+      return false;
+    } catch (e) {
+      print('Register error: $e');
+      return false;
+    }
+   }
 
   Future<Room> getRoomByName(String name) async {
     int? id = await SessionManager.getId();
@@ -202,7 +235,7 @@ class ApiService {
     }
   }
 
-  Future<void> deleteRoom(Room roomName, bool confirmConnectivity) async {
+  Future<void> deleteOrUpdateRoom(Room roomName, bool confirmConnectivity) async {
     final url = Uri.parse('$baseUrl/updateOrDeleteRoom?roomName=${roomName.name}&device_addr=${roomName.device_addr}&channel_type=${roomName.channel_type}&actionType=Delete&user_id=${await SessionManager.getId()}&device_status_check=$confirmConnectivity');
     final response = await http.get(
       url,

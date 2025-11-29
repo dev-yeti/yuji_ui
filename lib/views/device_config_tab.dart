@@ -59,7 +59,38 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
                 } else if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No rooms found'));
+                  // Show Add New card when no rooms exist
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          children: [
+                            _buildDashboardCard(
+                              context,
+                              null, // for Add Device, pass null
+                              Icons.add_circle,
+                              'Add New',
+                              Colors.blueAccent,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'No rooms found. Tap "Add New" to create a room.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  );
                 }
                 final rooms = snapshot.data!;
                 return Column(
@@ -259,7 +290,7 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
                   );
                   if (confirm == true) {
                     try {
-                      await _apiService.deleteRoom(room!, confirmConnectivity);
+                      await _apiService.deleteOrUpdateRoom(room!, confirmConnectivity);
                       setState(() {
                         // Optionally remove from UI or refresh
                         // _rooms.removeWhere((r) => r.name == room.name);

@@ -13,6 +13,8 @@ class _RoomsTabState extends State<RoomsTab> {
   final ApiService _apiService = ApiService();
   late Future<List<room_model.Room>> _roomsFuture;
   room_model.Room? _selectedRoom;
+  // id of the room currently being refreshed from API (shows loading indicator)
+  dynamic _loadingRoomId;
 
   @override
   void initState() {
@@ -78,10 +80,26 @@ class _RoomsTabState extends State<RoomsTab> {
                           automationIcon = Icons.home;
                       }
                       return GestureDetector(
-                        onTap: () async {
-                          final latestRoom = await _apiService.getRoomByName(room.name);
+                        onTap: () {
+                          // Immediately select the tapped room for instant UI feedback
                           setState(() {
-                            _selectedRoom = latestRoom;
+                            _selectedRoom = room;
+                            _loadingRoomId = room.id;
+                          });
+
+                          // Refresh latest data in background and update selection when available
+                          _apiService.getRoomByName(room.name).then((latestRoom) {
+                            if (!mounted) return;
+                            setState(() {
+                              _selectedRoom = latestRoom;
+                              _loadingRoomId = null;
+                            });
+                          }).catchError((e) {
+                            if (!mounted) return;
+                            setState(() {
+                              _loadingRoomId = null;
+                            });
+                            debugPrint('Failed to refresh room ${room.name}: $e');
                           });
                         },
                         child: Container(
@@ -117,11 +135,20 @@ class _RoomsTabState extends State<RoomsTab> {
                                   CircleAvatar(
                                     radius: 20, // reduced radius
                                     backgroundColor: isSelected ? Colors.white : Colors.indigo.shade50,
-                                    child: Icon(
-                                      automationIcon,
-                                      size: 22, // reduced icon size
-                                      color: isSelected ? Colors.indigo : Colors.grey.shade700,
-                                    ),
+                                    child: _loadingRoomId == room.id
+                                        ? SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(isSelected ? Colors.indigo : Colors.grey.shade700),
+                                            ),
+                                          )
+                                        : Icon(
+                                            automationIcon,
+                                            size: 22, // reduced icon size
+                                            color: isSelected ? Colors.indigo : Colors.grey.shade700,
+                                          ),
                                   ),
                                   const SizedBox(height: 6), // reduced spacing
                                   Text(
@@ -162,7 +189,18 @@ class _RoomsTabState extends State<RoomsTab> {
               Expanded(
                 child: _selectedRoom == null
                   ? Center(child: Text('Select a room to view switches'))
-                  : _selectedRoom!.switches == null || _selectedRoom!.switches!.isEmpty
+                  : (_loadingRoomId == _selectedRoom?.id)
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 12),
+                            Text('Loading room...'),
+                          ],
+                        ),
+                      )
+                    : _selectedRoom!.switches == null || _selectedRoom!.switches!.isEmpty
                     ? Center(child: Text('No switches found in this room'))
                     : ListView.builder(
                         itemCount: _selectedRoom!.switches!.length,
@@ -256,5 +294,5 @@ class _RoomsTabState extends State<RoomsTab> {
     );
   }
 }
-              
+
 

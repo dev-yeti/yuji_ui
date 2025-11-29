@@ -40,8 +40,11 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
   void initState() {
     super.initState();
     _selectedRoomName = widget.initialRoomName.isNotEmpty ? widget.initialRoomName : null;
-    _descController = TextEditingController(text: widget.initialDescription ?? '');
-    _macController = TextEditingController(text: widget.initialMacAddress ?? '');
+    _descController = TextEditingController();
+    _macController = TextEditingController();
+    // Assign values after controllers are created
+    _descController.text = widget.initialDescription ?? '';
+    _macController.text = widget.initialMacAddress ?? '';
   }
 
   @override
@@ -127,7 +130,7 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
                 ),
                 const SizedBox(height: 18),
                 TextFormField(
-                  controller: _macController,
+                  controller: _macController, // <-- Ensure controller is set
                   decoration: InputDecoration(
                     labelText: 'MAC Address',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -198,12 +201,7 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
                                     );
                                   } else {
                                     // Update existing room
-                                    await _apiService.updateRoom(
-                                      name: _selectedRoomName!,
-                                      description: _descController.text,
-                                      macAddress: _macController.text,
-                                      moduleType: _selectedModule!,
-                                    );
+                                    //await _apiService.deleteOrUpdateRoom(_selectedRoomName!,false);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(content: Text('Room updated successfully')),
                                     );
@@ -231,3 +229,4 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
     );
   }
 }
+  
