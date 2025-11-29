@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/room.dart';
-import '../models/switch.dart';
+import '../models/switch.dart' as Switch;
 import '../config/app_config.dart';
 import '../models/user.dart';
 import '../session/session_manager.dart';
 import 'dart:async'; 
 import 'dart:io';
+import 'package:flutter/material.dart';
+import '../globals.dart';
 
 class ApiService {
   // Use the baseUrl from your AppConfig or define it here
@@ -146,9 +148,21 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 10));
           
-
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        rootScaffoldMessengerKey.currentState?.showSnackBar(
+          SnackBar(
+            content: Text("Registration completed successfully, please login"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        rootScaffoldMessengerKey.currentState?.showSnackBar(
+          SnackBar(
+            content: Text("Registration failed: ${response.body}"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
 
       return response.statusCode == 200 || response.statusCode == 201;
     } on TimeoutException {
@@ -177,7 +191,7 @@ class ApiService {
     
   }
 
-  Future<void> updateSwitch(Switch roomSwitch, Room room) async {
+  Future<void> updateSwitch(Switch.Switch roomSwitch, Room room) async {
     int? id = await SessionManager.getId();
     final url = Uri.parse('$baseUrl/deviceCommand?roomName=${room.name}&switchId=${roomSwitch.id}&command=${roomSwitch.isOn ? "ON" : "OFF"}&deviceType=${roomSwitch.deviceType}&user_id=${id}');
     print("url: $url");
