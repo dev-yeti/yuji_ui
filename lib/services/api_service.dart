@@ -94,13 +94,13 @@ class ApiService {
   }
 
   Future<bool> login(String email, String password) async {
-    print("Logging in with email: $email, password: $password");
+    print("baseUrl: $baseUrl");
     user = User(email, password);
      final response = await http.post(
       Uri.parse('$baseUrl/auth/login'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'user_uuid': user.userUUId, 'password': user.password}),); 
-    
+    print(response);
     if(response.statusCode == 200) {
       // Assuming the API returns a token or some user data on successful login
       final data = json.decode(response.body);
@@ -193,7 +193,8 @@ class ApiService {
 
   Future<void> updateSwitch(Switch.Switch roomSwitch, Room room) async {
     int? id = await SessionManager.getId();
-    final url = Uri.parse('$baseUrl/deviceCommand?roomName=${room.name}&switchId=${roomSwitch.id}&command=${roomSwitch.isOn ? "ON" : "OFF"}&deviceType=${roomSwitch.deviceType}&user_id=${id}');
+    print(roomSwitch);
+    final url = Uri.parse('$baseUrl/deviceCommand?roomName=${room.name}&switchId=${roomSwitch.id}&command=${roomSwitch.isOn ? "ON" : "OFF"}&deviceType=${roomSwitch.deviceType}&fanSpeed=${roomSwitch.fanSpeed}&user_id=${id}');
     print("url: $url");
     
     final response = await http.get(

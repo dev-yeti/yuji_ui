@@ -232,14 +232,25 @@ class _RoomsTabState extends State<RoomsTab> {
                                                   value: (sw.fanSpeed ?? 0).toDouble(),
                                                   min: 0,
                                                   max: 100,
-                                                  divisions: 20,
+                                                  // 4 steps -> step size 25 (0,25,50,75,100) => divisions = 4
+                                                  divisions: 4,
                                                   label: '${sw.fanSpeed ?? 0}%',
+
+                                                  // Update local UI while dragging, snapping to nearest 25
                                                   onChanged: sw.isOn
                                                       ? (value) {
+                                                          final int snapped = ((value / 25).round()) * 25;
                                                           setState(() {
-                                                            sw.fanSpeed = value.toInt();
+                                                            sw.fanSpeed = snapped;
                                                           });
-                                                          // Optionally call API to update fan speed
+                                                        }
+                                                      : null,
+                                                  // Single API update when user finishes sliding (with snapped value)
+                                                  onChangeEnd: sw.isOn
+                                                      ? (value) {
+                                                          final int snapped = ((value / 25).round()) * 25;
+                                                          sw.fanSpeed = snapped;
+                                                          _apiService.updateSwitch(sw, _selectedRoom!);
                                                         }
                                                       : null,
                                                 ),
@@ -252,6 +263,12 @@ class _RoomsTabState extends State<RoomsTab> {
                                     Switch(
                                       value: sw.isOn,
                                       onChanged: (val) {
+                                        if(val && (sw.fanSpeed == null || sw.fanSpeed == 0)){
+                                          // If turning on fan with 0 speed, set to default 50%
+                                          setState(() {
+                                          sw.fanSpeed = 100;
+                                        });
+                                        }
                                         setState(() {
                                           sw.isOn = val;
                                         });

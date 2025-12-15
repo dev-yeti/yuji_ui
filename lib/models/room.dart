@@ -9,6 +9,7 @@ class Room {
   final int user_id;
   final String channel_type;
   final List<Switch>? switches;
+  final String? status;
 
   Room({
     required this.id,
@@ -19,6 +20,7 @@ class Room {
     required this.user_id,
     required this.switches,
     required this.channel_type,
+    required this.status,
   });
 
   factory Room.fromJson(Map<String, dynamic> json) {
@@ -33,6 +35,7 @@ class Room {
       switches: (json['switches'] as List?)
           ?.map((item) => Switch.fromJson(item))
           .toList(),
+      status: json['status'],
     );
   }
 
@@ -46,6 +49,7 @@ class Room {
       'user_id': user_id,
       'channel_type': channel_type,
       'switches': switches?.map((item) => item.toJson()).toList(),
+      'status': status,
     };
   }
 }

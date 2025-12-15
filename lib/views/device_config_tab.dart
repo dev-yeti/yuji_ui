@@ -179,6 +179,7 @@ class _DeviceConfigTabState extends State<DeviceConfigTab> {
                   user_id:0,
                   channel_type: '',
                   switches: [],
+                  status: '',
                 ));
                 showModalBottomSheet(
                   context: context,
