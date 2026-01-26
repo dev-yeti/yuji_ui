@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/room.dart';
 import '../models/switch.dart' as Switch;
+import '../models/room_devices.dart';
 import '../config/app_config.dart';
 import '../models/user.dart';
 import '../session/session_manager.dart';
@@ -91,6 +92,49 @@ class ApiService {
     // } else {
     //   throw Exception('Failed to load devices');
     // }
+  }
+
+  Future<RoomDeviceMap> getRoomsWithDevices() async {
+    int? userId = await SessionManager.getId();
+    if (userId == null) {
+      throw Exception('User ID not found. Please login first.');
+    }
+
+    final url = Uri.parse('$baseUrl/rooms/user/$userId');
+    print("Fetching rooms with devices from API: $url");
+
+    try {
+      final response = await http
+          .get(url, headers: {'Content-Type': 'application/json'})
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonData = json.decode(response.body);
+        final RoomDeviceMap roomDevices = {};
+
+        jsonData.forEach((roomName, devicesList) {
+          if (devicesList is List) {
+            roomDevices[roomName] = devicesList
+                .map((device) => RoomDevice.fromJson(device as Map<String, dynamic>))
+                .toList();
+          }
+        });
+
+        print('Fetched ${roomDevices.length} rooms with devices');
+        return roomDevices;
+      } else {
+        throw Exception('Failed to load rooms with devices. Status: ${response.statusCode}');
+      }
+    } on TimeoutException {
+      print('getRoomsWithDevices timeout: server did not respond within 10s');
+      rethrow;
+    } on SocketException catch (e) {
+      print('Socket error: $e — device cannot reach server');
+      rethrow;
+    } catch (e) {
+      print('Error fetching rooms with devices: $e');
+      rethrow;
+    }
   }
 
   Future<bool> login(String email, String password) async {
@@ -184,6 +228,17 @@ class ApiService {
     if (response.statusCode == 200) {
       dynamic roomJson = json.decode(response.body);
       print(roomJson);
+      if(roomJson == null || roomJson.isEmpty) {
+        throw Exception('Room not found');
+      }
+      if(roomJson['status'] != null && roomJson['status'] == 'success') {
+        rootScaffoldMessengerKey.currentState?.showSnackBar(
+          SnackBar(
+            content: Text("Registration completed successfully, please login"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
       return Room.fromJson(roomJson);
     } else {
       throw Exception('Failed to load devices');
