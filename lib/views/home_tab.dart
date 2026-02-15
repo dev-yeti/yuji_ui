@@ -1,53 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../models/dashboard_card.dart';
+import '../services/api_service.dart';
 
 // Model for dashboard card
-class DashboardCardData {
-  final String title;
-  final IconData icon;
-  final String subtitle;
-  final Color color;
-
-  DashboardCardData({
-    required this.title,
-    required this.icon,
-    required this.subtitle,
-    required this.color,
-  });
-
-  // Example factory from JSON (adjust keys/types as per your API)
-  factory DashboardCardData.fromJson(Map<String, dynamic> json) {
-    return DashboardCardData(
-      title: json['title'],
-      icon: _iconFromString(json['icon']),
-      subtitle: json['subtitle'],
-      color: _colorFromHex(json['color']),
-    );
-  }
-
-  static IconData _iconFromString(String iconName) {
-    // Map string names to IconData as needed
-    switch (iconName) {
-      case 'home':
-        return Icons.home;
-      case 'devices':
-        return Icons.devices;
-      case 'power':
-        return Icons.power;
-      case 'schedule':
-        return Icons.schedule;
-      default:
-        return Icons.help;
-    }
-  }
-
-  static Color _colorFromHex(String hex) {
-    // Parse color from hex string, e.g. "#4285F4"
-    hex = hex.replaceFirst('#', '');
-    return Color(int.parse('FF$hex', radix: 16));
-  }
-}
 
 class HomeTab extends StatelessWidget {
   final TabController tabController;
@@ -59,16 +14,7 @@ class HomeTab extends StatelessWidget {
     required this.onTabSelect, // Add this line
   }) : super(key: key);
 
-  Future<List<DashboardCardData>> fetchDashboardCards() async {
-    // Replace with your API endpoint
-    final response = await http.get(Uri.parse('https://your.api/endpoint/cards'));
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((json) => DashboardCardData.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load dashboard cards');
-    }
-  }
+  // Uses ApiService.fetchDashboardCards() for dynamic content
 
   // Mock data for dashboard cards
   Future<List<DashboardCardData>> fetchMockDashboardCards() async {
@@ -87,12 +33,6 @@ class HomeTab extends StatelessWidget {
         color: Colors.green,
       ),
       DashboardCardData(
-        title: 'Active',
-        icon: Icons.power,
-        subtitle: '8 Active',
-        color: Colors.orange,
-      ),
-      DashboardCardData(
         title: 'Schedules',
         icon: Icons.schedule,
         subtitle: '3 Schedules',
@@ -108,7 +48,7 @@ class HomeTab extends StatelessWidget {
         title: const Text('Home'),
       ),
       body: FutureBuilder<List<DashboardCardData>>(
-        future: fetchMockDashboardCards(),
+        future: ApiService().fetchDashboardCards(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

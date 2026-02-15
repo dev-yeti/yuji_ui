@@ -6,6 +6,7 @@ import '../models/room_devices.dart';
 import '../config/app_config.dart';
 import '../models/user.dart';
 import '../session/session_manager.dart';
+import '../models/dashboard_card.dart';
 import 'dart:async'; 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -81,6 +82,46 @@ class ApiService {
     } else {
       throw Exception('Failed to load rooms');
     }
+  }
+
+  Future<List<DashboardCardData>> fetchDashboardCards() async {
+    int? userId = await SessionManager.getId();
+    if (userId == null) {
+      throw Exception('No user id in session');
+    }
+
+    final uri = Uri.parse('$baseUrl/dashboard/$userId');
+    final response = await http.get(uri);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load dashboard summary');
+    }
+
+    final Map<String, dynamic> data = json.decode(response.body);
+
+    final int numberOfRooms = (data['numberOfRooms'] ?? 0) as int;
+    final int totalSwitches = (data['totalSwitches'] ?? 0) as int;
+    final int totalSchedules = (data['totalSchedules'] ?? 0) as int;
+
+    return [
+      DashboardCardData(
+        title: 'Rooms',
+        icon: Icons.home,
+        subtitle: '$numberOfRooms Rooms',
+        color: Colors.blue,
+      ),
+      DashboardCardData(
+        title: 'Devices',
+        icon: Icons.devices,
+        subtitle: '$totalSwitches Devices',
+        color: Colors.green,
+      ),
+      DashboardCardData(
+        title: 'Schedules',
+        icon: Icons.schedule,
+        subtitle: '$totalSchedules Schedules',
+        color: Colors.purple,
+      ),
+    ];
   }
 
   Future<List<Room>> getDevices(int roomId) async {
