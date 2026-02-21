@@ -204,7 +204,8 @@ class ApiService {
     //return true;
   }
 
-  Future<bool> register(String firstName, String lastName, String email, String mobile, String userId, String password) async {
+  // Returns a map with keys: 'success' (bool) and 'message' (String)
+  Future<Map<String, dynamic>> register(String firstName, String lastName, String email, String mobile, String userId, String password) async {
     print('Registering user with email: $email');
     print('baseUrl: $baseUrl');
 
@@ -233,32 +234,51 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 10));
           
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      String message = '';
+      try {
+        final body = response.body.isNotEmpty ? json.decode(response.body) : null;
+        if (body is Map && body['message'] != null) {
+          message = body['message'].toString();
+        } else if (body is String && body.isNotEmpty) {
+          message = body;
+        } else {
+          message = response.statusCode == 200 || response.statusCode == 201
+              ? 'Registration completed successfully, please login'
+              : 'Registration failed';
+        }
+      } catch (e) {
+        message = response.statusCode == 200 || response.statusCode == 201
+            ? 'Registration completed successfully, please login'
+            : 'Registration failed: ${response.body}';
+      }
+
+      final success = response.statusCode == 200 || response.statusCode == 201;
+      if (success) {
         rootScaffoldMessengerKey.currentState?.showSnackBar(
           SnackBar(
-            content: Text("Registration completed successfully, please login"),
+            content: Text(message),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         rootScaffoldMessengerKey.currentState?.showSnackBar(
           SnackBar(
-            content: Text("Registration failed: ${response.body}"),
+            content: Text(message),
             backgroundColor: Colors.redAccent,
           ),
         );
       }
 
-      return response.statusCode == 200 || response.statusCode == 201;
+      return {'success': success, 'message': message};
     } on TimeoutException {
       print('Register timeout: server did not respond within 10s');
-      return false;
+      return {'success': false, 'message': 'Server timeout'};
     } on SocketException catch (e) {
       print('Socket error: $e — device cannot reach server. Check mobile network, server firewall, and that the server is bound to 0.0.0.0.');
-      return false;
+      return {'success': false, 'message': 'Network error: $e'};
     } catch (e) {
       print('Register error: $e');
-      return false;
+      return {'success': false, 'message': 'Unexpected error: $e'};
     }
    }
 
@@ -285,6 +305,79 @@ class ApiService {
       throw Exception('Failed to load devices');
     }
     
+  }
+
+  // Request server to send an OTP to the provided email. Returns a map with
+  // keys: 'success' (bool) and 'message' (String).
+  Future<Map<String, dynamic>> sendOtp(String email) async {
+    try {
+      final url = Uri.parse('$baseUrl/auth/sendOtp');
+      print('Requesting OTP for email: $email');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email}),
+      ).timeout(const Duration(seconds: 10));
+
+      print('sendOtp response: ${response.statusCode} - ${response.body}');
+
+      String message = '';
+      try {
+        final body = response.body.isNotEmpty ? json.decode(response.body) : null;
+        if (body is Map && body['message'] != null) {
+          message = body['message'].toString();
+        } else if (body is String && body.isNotEmpty) {
+          message = body;
+        } else {
+          message = response.statusCode == 200 || response.statusCode == 201
+              ? 'OTP sent'
+              : 'Failed to send OTP';
+        }
+      } catch (e) {
+        message = response.statusCode == 200 || response.statusCode == 201
+            ? 'OTP sent'
+            : 'Failed to send OTP: ${response.body}';
+      }
+
+      final success = response.statusCode == 200 || response.statusCode == 201;
+      // Show message to user via global ScaffoldMessenger so UI sees server feedback
+      if (message.isNotEmpty) {
+        rootScaffoldMessengerKey.currentState?.showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: success ? Colors.green : Colors.redAccent,
+          ),
+        );
+      }
+
+      return {'success': success, 'message': message};
+    } on TimeoutException {
+      print('sendOtp timeout: server did not respond within 10s');
+      return {'success': false, 'message': 'Server timeout'};
+    } on SocketException catch (e) {
+      print('sendOtp socket error: $e');
+      return {'success': false, 'message': 'Network error: $e'};
+    } catch (e) {
+      print('sendOtp error: $e');
+      return {'success': false, 'message': 'Unexpected error: $e'};
+    }
+  }
+
+  // Verify OTP with server. Returns true when OTP is valid.
+  Future<bool> verifyOtp(String email, String otp) async {
+    try {
+      final url = Uri.parse('$baseUrl/auth/verifyOtp');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email, 'otp': otp}),
+      ).timeout(const Duration(seconds: 10));
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('verifyOtp error: $e');
+      return false;
+    }
   }
 
   Future<void> updateSwitch(Switch.Switch roomSwitch, Room room) async {
